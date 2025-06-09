@@ -1,70 +1,31 @@
 name: Deploy to GCS
 
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the main branch
 on:
   push:
-    branches:
-      - main
-      - master  # Add if you're using master branch
-    # Removed path filters for testing
-    
-  workflow_dispatch:  # Allows manual triggering
+    branches: [ main ]
 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  # This workflow contains a single job called "deploy"
   deploy:
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
-    
-    - name: Verify Files
-      run: |
-        echo "Checking workflow files..."
-        ls -la
-        ls -la .github/workflows/
-    
-    - name: Set up Python
-      uses: actions/setup-python@v2
+
+    # Setup gcloud CLI
+    - uses: google-github-actions/setup-gcloud@v0
       with:
-        python-version: '3.12'
-          
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v0
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
-        
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v0
-      
-    - name: List GCS Buckets (Test Connection)
-      run: gsutil ls
-      
-    # Rest of your deployment steps...
-      
-    - name: Run Dataflow template creation
+        service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: github-actions-gcs
+
+    - name: Deploy via GCS
       run: |
-        python -m dataflow.data_pipeline \
-          --runner DataflowRunner \
-          --project test-data-462007 \
-          --region us-central1 \
-          --staging_location gs://dataflow_demo_001/staging \
-          --temp_location gs://dataflow_demo_001/temp \
-          --template_location gs://dataflow_demo_001/templates/dataflow_template \
-          --save_main_session
-    
-    - name: Deploy Cloud Function code
-      run: |
-        gsutil cp dataflow/main.py gs://dataflow_demo_001/code/
-        gsutil cp dataflow/requirements.txt gs://dataflow_demo_001/code/
-        
-    - name: Deploy Cloud Function
-      run: |
-        gcloud functions deploy trigger_dataflow \
-          --region us-central1 \
-          --runtime python39 \
-          --trigger-resource dataflow_demo_001 \
-          --trigger-event google.storage.object.finalize \
-          --source gs://dataflow_demo_001/code \
-          --entry-point trigger_dataflow \
-          --memory 256MB \
-          --timeout 60s \
-          --set-env-vars GCP_PROJECT=test-data-462007,GCP_REGION=us-central1
+        gsutil -m rm -rf gs://github-action-gcs/* || echo "$?"
+        gsutil -m cp -r * gs://github-action-gcs/
