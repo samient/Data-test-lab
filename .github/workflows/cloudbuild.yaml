@@ -1,3 +1,0 @@
-steps:
-  - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', 'dataflow_sales_job.py', 'gs://dataflow_demo_001/code/dataflow_sales_job.py']
