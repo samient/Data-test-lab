@@ -1,0 +1,62 @@
+name: Deploy to GCS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dataflow/**'
+      - '.github/workflows/deploy.yaml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install apache-beam[gcp]==2.40.0
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0
+      
+    - name: Run Dataflow template creation
+      run: |
+        python -m dataflow.data_pipeline \
+          --runner DataflowRunner \
+          --project test-data-462007 \
+          --region us-central1 \
+          --staging_location gs://dataflow_demo_001/staging \
+          --temp_location gs://dataflow_demo_001/temp \
+          --template_location gs://dataflow_demo_001/templates/dataflow_template \
+          --save_main_session
+    
+    - name: Deploy Cloud Function code
+      run: |
+        gsutil cp dataflow/main.py gs://dataflow_demo_001/code/
+        gsutil cp dataflow/requirements.txt gs://dataflow_demo_001/code/
+        
+    - name: Deploy Cloud Function
+      run: |
+        gcloud functions deploy trigger_dataflow \
+          --region us-central1 \
+          --runtime python39 \
+          --trigger-resource dataflow_demo_001 \
+          --trigger-event google.storage.object.finalize \
+          --source gs://dataflow_demo_001/code \
+          --entry-point trigger_dataflow \
+          --memory 256MB \
+          --timeout 60s \
+          --set-env-vars GCP_PROJECT=test-data-462007,GCP_REGION=us-central1
