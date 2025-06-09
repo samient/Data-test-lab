@@ -4,15 +4,23 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'dataflow/**'
-      - '.github/workflows/deploy.yaml'
+      - master  # Add if you're using master branch
+    # Removed path filters for testing
+    
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
     steps:
     - uses: actions/checkout@v2
+    
+    - name: Verify Files
+      run: |
+        echo "Checking workflow files..."
+        ls -la
+        ls -la .github/workflows/
     
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -31,6 +39,11 @@ jobs:
         
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v0
+      
+    - name: List GCS Buckets (Test Connection)
+      run: gsutil ls
+      
+    # Rest of your deployment steps...
       
     - name: Run Dataflow template creation
       run: |
