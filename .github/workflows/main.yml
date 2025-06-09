@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'dataflow/**'
-      - '.github/workflows/deploy.yaml'
+      - '.github/workflows/main.yaml'
 
 jobs:
   deploy:
