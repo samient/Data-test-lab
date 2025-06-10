@@ -43,8 +43,8 @@ def run_pipeline(input_path, output_path, project, region):
     options = PipelineOptions(
         flags=[],
         runner='DataflowRunner',
-        project=project,
-        region=region,
+        project=test-data-462007,
+        region=us-central1,
         temp_location=output_path.replace('/output/', '/temp/'),
         staging_location=output_path.replace('/output/', '/staging/'),
         service_account_email='dataflow-service-account@test-data-462007.iam.gserviceaccount.com'
@@ -72,7 +72,7 @@ def run_pipeline(input_path, output_path, project, region):
             | 'WriteToBigQuery' >> WriteToBigQuery(
                 table='sales_data.transactions',
                 dataset='sales_data',
-                project=project,
+                project=test-data-462007,
                 schema=table_schema,
                 create_disposition='CREATE_IF_NEEDED',
                 write_disposition='WRITE_APPEND'

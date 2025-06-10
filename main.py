@@ -44,8 +44,8 @@ def trigger_dataflow(event, context):
     job_params = {
         "input": input_path,
         "output": output_path,
-        "project": project_id,
-        "region": region
+        "project": test-data-462007,
+        "region": us-central1
     }
     
     # Launch the Dataflow job
@@ -56,8 +56,8 @@ def trigger_dataflow(event, context):
     )
     
     response = client.launch_template(
-        project_id=project_id,
-        location=region,
+        project_id=test-data-462007,
+        location=us-central1,
         gcs_path=template_path,
         launch_parameters=request
     )
