@@ -28,7 +28,7 @@ def trigger_dataflow(event, context):
     # Set up Dataflow client
     client = dataflow_v1beta3.JobsV1Beta3Client()
     
-    project_id = os.environ.get('GCP_PROJECT', 'test-data-462007')
+    project_id = os.environ.get('GCP_PROJECT', 'test-data-462501')
     region = os.environ.get('GCP_REGION', 'us-central1')
     template_path = f"gs://{bucket_name}/templates/dataflow_template"
     input_path = f"gs://{bucket_name}/{file_name}"
@@ -37,14 +37,14 @@ def trigger_dataflow(event, context):
     # Environment configuration
     environment = dataflow_v1beta3.Environment(
         temp_location=f"gs://{bucket_name}/temp",
-        service_account_email="dataflow-service-account@test-data-462007.iam.gserviceaccount.com",
+        service_account_email="data-engineer@test-data-462501.iam.gserviceaccount.com",
     )
     
     # Job parameters
     job_params = {
         "input": input_path,
         "output": output_path,
-        "project": test-data-462007,
+        "project": test-data-462501,
         "region": us-central1
     }
     
@@ -56,7 +56,7 @@ def trigger_dataflow(event, context):
     )
     
     response = client.launch_template(
-        project_id=test-data-462007,
+        project_id=test-data-462501,
         location=us-central1,
         gcs_path=template_path,
         launch_parameters=request
