@@ -1,0 +1,31 @@
+name: Upload to GCS
+
+on:
+  push:
+    branches:
+      - main  # or your target branch
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python (if needed)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Upload to GCS
+        uses: google-github-actions/upload-cloud-storage@v1
+        with:
+          path: '.'  # Adjust if you want to upload a specific folder
+          destination: 'bucket-jenkins-007'
+          parent: false  # Avoid nesting in subfolders
