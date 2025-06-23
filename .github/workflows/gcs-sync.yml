@@ -30,7 +30,7 @@ jobs:
       - name: Set branch name
         id: vars
         run: |
-          BRANCH_NAME= main
+          BRANCH_NAME=${GITHUB_REF##*/}
           echo "branch=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Sync deletions to GCS
