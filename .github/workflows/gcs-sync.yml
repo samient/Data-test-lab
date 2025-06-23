@@ -3,7 +3,7 @@ name: Sync to GCS with Deletions
 on:
   push:
     branches:
-      - '**'  # Runs on all branches
+      - main  # Runs on all branches
 
 jobs:
   sync-to-gcs:
@@ -30,7 +30,7 @@ jobs:
       - name: Set branch name
         id: vars
         run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
+          BRANCH_NAME= main
           echo "branch=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Sync deletions to GCS
