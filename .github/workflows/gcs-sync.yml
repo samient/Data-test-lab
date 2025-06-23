@@ -3,7 +3,7 @@ name: Sync to GCS with Deletions
 on:
   push:
     branches:
-      - main  # Runs on all branches
+      - '**'  # Runs on all branches
 
 jobs:
   sync-to-gcs:
