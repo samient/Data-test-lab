@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GCS_BUCKET: gs://bucket-jenkins-007/
+      GCS_BUCKET: bucket-jenkins-007
       PROJECT_ID: test-data-462007
 
     steps:
