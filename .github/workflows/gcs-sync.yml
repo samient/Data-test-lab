@@ -5,7 +5,7 @@ name: Sync to GCS with Deletions
 on:
   push:
     branches:
-      - '**'  # Double asterisk = all branches (main, dev, feature/*, etc.)
+      - main  # Double asterisk = all branches (main, dev, feature/*, etc.)
 
 jobs:
   sync-to-gcs:
