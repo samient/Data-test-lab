@@ -32,7 +32,7 @@ jobs:
       - name: Authenticate with GCP
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'  # Secret must contain raw key.json content
+          credentials_json: '${{ secrets.GCP_SA_KEY_DATA }}'  # Secret must contain raw key.json content
 
       # Step 4: Extract the branch name (e.g., main, feature-x)
       - name: Set branch name
