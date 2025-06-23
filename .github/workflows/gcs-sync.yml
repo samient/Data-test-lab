@@ -1,52 +1,65 @@
+# Workflow name that appears in GitHub Actions UI
 name: Sync to GCS with Deletions
 
+# Trigger this workflow on push events to any branch
 on:
   push:
     branches:
-      - '**'  # Runs on all branches
+      - '**'  # Double asterisk = all branches (main, dev, feature/*, etc.)
 
 jobs:
   sync-to-gcs:
+    # Use the latest Ubuntu runner provided by GitHub
     runs-on: ubuntu-latest
 
+    # Define environment variables for use across steps
     env:
-      GCS_BUCKET: bucket-jenkins-007
-      PROJECT_ID: test-data-462007
+      GCS_BUCKET: bucket-jenkins-007          # GCS bucket name
+      PROJECT_ID: test-data-462007            # GCP project ID
 
     steps:
+      # Step 1: Checkout the current branch's code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Set up Google Cloud CLI (gcloud and gsutil)
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
 
+      # Step 3: Authenticate to GCP using the service account key stored in GitHub Secrets
       - name: Authenticate with GCP
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'  # Secret must contain raw key.json content
 
+      # Step 4: Extract the branch name (e.g., main, feature-x)
       - name: Set branch name
         id: vars
         run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
-          echo "branch=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
+          BRANCH_NAME=${GITHUB_REF##*/}  # Extract the branch name from the GitHub ref
+          echo "branch=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"  # Export it for use in later steps
 
+      # Step 5: Sync deletions – remove files from GCS that no longer exist in Git
       - name: Sync deletions to GCS
         run: |
-          BRANCH=${{ steps.vars.outputs.branch }}
-          GCS_PATH=gs://$GCS_BUCKET/$BRANCH/
+          BRANCH=${{ steps.vars.outputs.branch }}      # Get current branch name
+          GCS_PATH=gs://$GCS_BUCKET/$BRANCH/           # Set branch-specific GCS path
 
           echo "Getting GCS file list..."
           gsutil ls -r $GCS_PATH | sed 's|^gs://[^/]*/||' > gcs_files.txt || touch gcs_files.txt
+          # List all files in GCS under this branch and convert full path to relative
 
           echo "Getting Git repo file list..."
           find . -type f ! -path "./.git/*" | sed 's|^./||' > git_files.txt
+          # List all files in the local repo (excluding .git folder)
 
           echo "Finding files to delete from GCS..."
           grep -Fxv -f git_files.txt gcs_files.txt > to_delete.txt || true
+          # Compare: find files present in GCS but not in Git (i.e., deleted in Git)
 
+          # Delete each outdated file from GCS
           if [ -s to_delete.txt ]; then
             echo "Deleting files:"
             cat to_delete.txt
@@ -57,10 +70,11 @@ jobs:
             echo "No files to delete."
           fi
 
+      # Step 6: Upload all local repo files to GCS
       - name: Upload files to GCS
         run: |
           BRANCH=${{ steps.vars.outputs.branch }}
           GCS_PATH=gs://$GCS_BUCKET/$BRANCH/
 
           echo "Uploading files to $GCS_PATH"
-          gsutil -m cp -r * $GCS_PATH
+          gsutil -m cp -r * $GCS_PATH  # Upload all files recursively with parallelization
