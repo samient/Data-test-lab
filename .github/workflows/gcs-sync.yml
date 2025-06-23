@@ -16,7 +16,7 @@ jobs:
     env:
       GCS_BUCKET: bucket-jenkins-007          # GCS bucket name
       PROJECT_ID: test-data-462007            # GCP project ID
-
+      type: service_account # Authentication type for GCP
     steps:
       # Step 1: Checkout the current branch's code
       - name: Checkout repository
